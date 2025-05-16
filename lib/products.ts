@@ -1,0 +1,122 @@
+"use server"
+
+import { createServerSupabaseClient } from "@/lib/supabase"
+
+export type Product = {
+  id: number
+  name: string
+  price: number
+  image: string
+  category: string
+  description: string
+  is_popular: boolean
+  care_instructions?: {
+    light: string
+    water: string
+    soil: string
+    humidity: string
+    temperature: string
+    fertilizer: string
+  }
+  seller?: {
+    name: string
+    rating: number
+    response_time: string
+  }
+}
+
+export async function getProducts() {
+  const supabase = createServerSupabaseClient()
+
+  try {
+    const { data, error } = await supabase.from("products").select("*").order("id")
+
+    if (error) {
+      // Check if the error is because the table doesn't exist
+      if (error.message.includes("relation") && error.message.includes("does not exist")) {
+        console.error("Products table does not exist. Please run the setup process.")
+        return []
+      }
+
+      console.error("Error fetching products:", error)
+      return []
+    }
+
+    return data as Product[]
+  } catch (error) {
+    console.error("Error fetching products:", error)
+    return []
+  }
+}
+
+export async function getProductById(id: number) {
+  const supabase = createServerSupabaseClient()
+
+  try {
+    const { data, error } = await supabase.from("products").select("*").eq("id", id).single()
+
+    if (error) {
+      // Check if the error is because the table doesn't exist
+      if (error.message.includes("relation") && error.message.includes("does not exist")) {
+        console.error("Products table does not exist. Please run the setup process.")
+        return null
+      }
+
+      console.error(`Error fetching product with id ${id}:`, error)
+      return null
+    }
+
+    return data as Product
+  } catch (error) {
+    console.error(`Error fetching product with id ${id}:`, error)
+    return null
+  }
+}
+
+export async function getPopularProducts(limit = 6) {
+  const supabase = createServerSupabaseClient()
+
+  try {
+    const { data, error } = await supabase.from("products").select("*").eq("is_popular", true).limit(limit)
+
+    if (error) {
+      // Check if the error is because the table doesn't exist
+      if (error.message.includes("relation") && error.message.includes("does not exist")) {
+        console.error("Products table does not exist. Please run the setup process.")
+        return []
+      }
+
+      console.error("Error fetching popular products:", error)
+      return []
+    }
+
+    return data as Product[]
+  } catch (error) {
+    console.error("Error fetching popular products:", error)
+    return []
+  }
+}
+
+export async function getProductsByCategory(category: string) {
+  const supabase = createServerSupabaseClient()
+
+  try {
+    const { data, error } = await supabase.from("products").select("*").eq("category", category)
+
+    if (error) {
+      // Check if the error is because the table doesn't exist
+      if (error.message.includes("relation") && error.message.includes("does not exist")) {
+        console.error("Products table does not exist. Please run the setup process.")
+        return []
+      }
+
+      console.error(`Error fetching products in category ${category}:`, error)
+      return []
+    }
+
+    return data as Product[]
+  } catch (error) {
+    console.error(`Error fetching products in category ${category}:`, error)
+    return []
+  }
+}
