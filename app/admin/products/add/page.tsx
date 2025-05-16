@@ -17,6 +17,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import ProtectedRoute from "@/components/protected-route"
 import { createProduct } from "@/lib/admin"
+// Add the following imports if they don't exist
+import { ImageUpload } from "@/components/image-upload"
+import { toast } from "@/components/ui/use-toast"
+// Add the import for the ImageUpload component
+// import { ImageUpload } from "@/components/image-upload"
 
 export default function AddProductPage() {
   const router = useRouter()
@@ -24,6 +29,11 @@ export default function AddProductPage() {
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState("")
   const [success, setSuccess] = useState("")
+
+  // Add these state variables to the component
+  const [uploadedImageUrl, setUploadedImageUrl] = useState<string>("")
+  const [uploadedImagePath, setUploadedImagePath] = useState<string>("")
+  const [uploadError, setUploadError] = useState<string>("")
 
   // Product form state
   const [product, setProduct] = useState({
@@ -42,6 +52,17 @@ export default function AddProductPage() {
       temperature: "",
       fertilizer: "",
     },
+  })
+
+  // Update the formData state to include image_path
+  const [formData, setFormData] = useState({
+    name: "",
+    price: "",
+    description: "",
+    category: "",
+    stock: "",
+    image_url: "",
+    image_path: "",
   })
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -78,64 +99,44 @@ export default function AddProductPage() {
     }))
   }
 
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  // Update the handleSubmit function to include image data
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setError("")
-    setSuccess("")
-    setIsSaving(true)
+    setIsSubmitting(true)
 
     try {
-      // Prepare the product data for creation
-      const productData = {
-        name: product.name,
-        price: product.price,
-        image: "/placeholder.svg?height=500&width=500", // Default placeholder image
-        category: product.category,
-        description: product.description,
-        is_popular: product.isPopular,
-        care_instructions: product.careInstructions,
-        seller: {
-          name: "BenihKu Official Store",
-          rating: 5.0,
-          response_time: "± 1 jam",
-        },
-      }
+      const result = await createProduct({
+        name: formData.name,
+        price: Number.parseFloat(formData.price),
+        description: formData.description,
+        category: formData.category,
+        stock: Number.parseInt(formData.stock),
+        image_url: formData.image_url,
+        image_path: formData.image_path,
+      })
 
-      const { success, error } = await createProduct(productData)
-
-      if (success) {
-        setSuccess("Produk berhasil ditambahkan!")
-
-        // Reset form after successful submission
-        setProduct({
-          name: "",
-          price: 0,
-          category: "",
-          description: "",
-          status: "published",
-          stock: 0,
-          isPopular: false,
-          careInstructions: {
-            light: "",
-            water: "",
-            soil: "",
-            humidity: "",
-            temperature: "",
-            fertilizer: "",
-          },
+      if (result.success) {
+        toast({
+          title: "Success",
+          description: "Product added successfully",
         })
-
-        // Redirect to admin dashboard after a short delay
-        setTimeout(() => {
-          router.push("/admin")
-        }, 2000)
+        router.push("/admin/products")
       } else {
-        setError(error || "Terjadi kesalahan saat menyimpan produk. Silakan coba lagi.")
+        toast({
+          title: "Error",
+          description: result.error || "Failed to add product",
+          variant: "destructive",
+        })
       }
-    } catch (err) {
-      setError("Terjadi kesalahan saat menyimpan produk. Silakan coba lagi.")
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "An unexpected error occurred",
+        variant: "destructive",
+      })
     } finally {
-      setIsSaving(false)
+      setIsSubmitting(false)
     }
   }
 
@@ -186,7 +187,6 @@ export default function AddProductPage() {
             <TabsTrigger value="care">Perawatan</TabsTrigger>
             <TabsTrigger value="images">Gambar</TabsTrigger>
           </TabsList>
-
           <TabsContent value="basic">
             <Card>
               <CardHeader>
@@ -283,7 +283,6 @@ export default function AddProductPage() {
               </CardContent>
             </Card>
           </TabsContent>
-
           <TabsContent value="care">
             <Card>
               <CardHeader>
@@ -364,27 +363,27 @@ export default function AddProductPage() {
               </CardContent>
             </Card>
           </TabsContent>
-
-          <TabsContent value="images">
-            <Card>
-              <CardHeader>
-                <CardTitle>Gambar Produk</CardTitle>
-                <CardDescription>Unggah gambar produk yang akan ditampilkan kepada pelanggan.</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 gap-4">
-                  <div className="border-2 border-dashed rounded-lg p-6 text-center">
-                    <div className="mx-auto w-32 h-32 mb-4 bg-gray-100 rounded-lg flex items-center justify-center">
-                      <span className="text-gray-400">Belum ada gambar</span>
-                    </div>
-                    <div className="space-y-2">
-                      <Button variant="outline">Unggah Gambar</Button>
-                      <p className="text-xs text-gray-500">Format yang didukung: JPG, PNG. Ukuran maksimal: 5MB.</p>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+          // Replace the images TabsContent with this updated version
+          <TabsContent value="images" className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="image">Product Image</Label>
+              <ImageUpload
+                onImageUploaded={(url, path) => {
+                  setFormData({
+                    ...formData,
+                    image_url: url,
+                    image_path: path,
+                  })
+                }}
+                onError={(error) => {
+                  toast({
+                    title: "Error",
+                    description: error,
+                    variant: "destructive",
+                  })
+                }}
+              />
+            </div>
           </TabsContent>
         </Tabs>
       </div>

@@ -18,6 +18,9 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import ProtectedRoute from "@/components/protected-route"
 import { getProductById } from "@/lib/products"
 import { updateProduct } from "@/lib/admin"
+// Add the import for the ImageUpload component
+import { ImageUpload } from "@/components/image-upload"
+import { toast } from "@/components/ui/use-toast"
 
 // Sample plant data - in a real app, this would come from a database
 const plantsData = [
@@ -57,6 +60,12 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState("")
   const [success, setSuccess] = useState("")
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  // Add these state variables to the component
+  const [uploadedImageUrl, setUploadedImageUrl] = useState<string>("")
+  const [uploadedImagePath, setUploadedImagePath] = useState<string>("")
+  const [uploadError, setUploadError] = useState<string>("")
 
   // Product form state
   const [product, setProduct] = useState({
@@ -77,6 +86,16 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
       temperature: "",
       fertilizer: "",
     },
+  })
+
+  const [formData, setFormData] = useState({
+    name: product?.name || "",
+    price: product?.price?.toString() || "",
+    description: product?.description || "",
+    category: product?.category || "",
+    stock: product?.stock?.toString() || "",
+    image_url: product?.image || "",
+    image_path: "",
   })
 
   // Load product data
@@ -105,6 +124,16 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
               temperature: productData.care_instructions?.temperature || "",
               fertilizer: productData.care_instructions?.fertilizer || "",
             },
+          })
+
+          setFormData({
+            name: productData?.name || "",
+            price: productData?.price?.toString() || "",
+            description: productData?.description || "",
+            category: productData?.category || "",
+            stock: productData?.stock?.toString() || "",
+            image_url: productData?.image || "",
+            image_path: productData?.image_path || "",
           })
         } else {
           setError("Produk tidak ditemukan")
@@ -154,39 +183,44 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
     }))
   }
 
+  // Update the handleSubmit function to include the uploaded image
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setError("")
-    setSuccess("")
-    setIsSaving(true)
+    setIsSubmitting(true)
 
     try {
-      // Prepare the product data for update
-      const productData = {
-        name: product.name,
-        price: product.price,
-        category: product.category,
-        description: product.description,
-        is_popular: product.isPopular,
-        care_instructions: product.careInstructions,
-      }
+      const result = await updateProduct({
+        id: product.id,
+        name: formData.name,
+        price: Number.parseFloat(formData.price),
+        description: formData.description,
+        category: formData.category,
+        stock: Number.parseInt(formData.stock),
+        image_url: formData.image_url,
+        image_path: formData.image_path,
+      })
 
-      const { success, error } = await updateProduct(productId, productData)
-
-      if (success) {
-        setSuccess("Produk berhasil disimpan!")
-
-        // Optionally redirect back to admin page after a delay
-        setTimeout(() => {
-          router.push("/admin")
-        }, 2000)
+      if (result.success) {
+        toast({
+          title: "Success",
+          description: "Product updated successfully",
+        })
+        router.push("/admin/products")
       } else {
-        setError(error || "Terjadi kesalahan saat menyimpan produk. Silakan coba lagi.")
+        toast({
+          title: "Error",
+          description: result.error || "Failed to update product",
+          variant: "destructive",
+        })
       }
-    } catch (err) {
-      setError("Terjadi kesalahan saat menyimpan produk. Silakan coba lagi.")
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "An unexpected error occurred",
+        variant: "destructive",
+      })
     } finally {
-      setIsSaving(false)
+      setIsSubmitting(false)
     }
   }
 
@@ -444,27 +478,20 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
                   <CardDescription>Unggah gambar produk yang akan ditampilkan kepada pelanggan.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-1 gap-4">
-                    <div className="border-2 border-dashed rounded-lg p-6 text-center">
-                      <div className="mx-auto w-32 h-32 mb-4 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center overflow-hidden">
-                        {product.id ? (
-                          <img
-                            src={product.image || `/placeholder.svg?height=300&width=300`}
-                            alt="Preview"
-                            className="max-h-full max-w-full object-contain"
-                          />
-                        ) : (
-                          <span className="text-gray-400 dark:text-gray-500">Belum ada gambar</span>
-                        )}
-                      </div>
-                      <div className="space-y-2">
-                        <Button variant="outline">Unggah Gambar</Button>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">
-                          Format yang didukung: JPG, PNG. Ukuran maksimal: 5MB.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
+                  {uploadError && (
+                    <Alert variant="destructive" className="mb-6">
+                      <AlertDescription>{uploadError}</AlertDescription>
+                    </Alert>
+                  )}
+                  <ImageUpload
+                    currentImage={product.image}
+                    onImageUploaded={(url, path) => {
+                      setUploadedImageUrl(url)
+                      setUploadedImagePath(path)
+                      setUploadError("")
+                    }}
+                    onError={setUploadError}
+                  />
                 </CardContent>
               </Card>
             </TabsContent>

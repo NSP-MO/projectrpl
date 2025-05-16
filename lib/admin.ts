@@ -21,55 +21,104 @@ export async function getAdminProducts() {
   }
 }
 
-export async function updateProduct(id: number, productData: Partial<Product>) {
-  const supabase = createServerSupabaseClient()
-
+// Update the updateProduct function to include image fields
+export async function updateProduct({
+  id,
+  name,
+  price,
+  description,
+  category,
+  stock,
+  image_url,
+  image_path,
+}: {
+  id: number
+  name: string
+  price: number
+  description: string
+  category: string
+  stock: number
+  image_url?: string
+  image_path?: string
+}) {
   try {
-    // Update the product
-    const { data, error } = await supabase
-      .from("products")
-      .update({
-        ...productData,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", id)
-      .select()
+    const supabase = createServerSupabaseClient()
+
+    const updateData: any = {
+      name,
+      price,
+      description,
+      category,
+      stock,
+      updated_at: new Date().toISOString(),
+    }
+
+    // Only include image fields if they are provided
+    if (image_url) updateData.image = image_url
+    if (image_path) updateData.image_path = image_path
+
+    const { error } = await supabase.from("products").update(updateData).eq("id", id)
 
     if (error) {
       console.error("Error updating product:", error)
       return { success: false, error: error.message }
     }
 
-    return { success: true, data }
+    return { success: true }
   } catch (error: any) {
-    console.error("Error updating product:", error)
-    return { success: false, error: error.message }
+    console.error("Error in updateProduct:", error)
+    return { success: false, error: error.message || "Failed to update product" }
   }
 }
 
-export async function createProduct(productData: Omit<Product, "id">) {
-  const supabase = createServerSupabaseClient()
-
+// Update the addProduct function to include image fields
+export async function createProduct({
+  name,
+  price,
+  description,
+  category,
+  stock,
+  image_url,
+  image_path,
+}: {
+  name: string
+  price: number
+  description: string
+  category: string
+  stock: number
+  image_url?: string
+  image_path?: string
+}) {
   try {
-    // Create the product
+    const supabase = createServerSupabaseClient()
+
     const { data, error } = await supabase
       .from("products")
-      .insert({
-        ...productData,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      })
+      .insert([
+        {
+          name,
+          price,
+          description,
+          category,
+          stock,
+          image: image_url,
+          image_path,
+          is_popular: false,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        },
+      ])
       .select()
 
     if (error) {
-      console.error("Error creating product:", error)
+      console.error("Error adding product:", error)
       return { success: false, error: error.message }
     }
 
     return { success: true, data }
   } catch (error: any) {
-    console.error("Error creating product:", error)
-    return { success: false, error: error.message }
+    console.error("Error in addProduct:", error)
+    return { success: false, error: error.message || "Failed to add product" }
   }
 }
 
