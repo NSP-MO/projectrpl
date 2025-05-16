@@ -6,7 +6,7 @@ Benihku merupakan website yang diperuntukan untuk membantu para penjual dan pemb
 Website BenihKu ini merupakan website yang berbasis react-typescript dengan Supabase database yang bersifat serverless.
 
 ## Deployment
-Project dapat diakses pada link berikut: **[https://projectrpl2025.vercel.app/](https://projectrpl2025.vercel.app/)**
+Project dapat diakses pada link berikut: **[https://www.projectrpl.site/](https://www.projectrpl.site/)**
 
 ## How to run locally
 1. Clone this repository 
