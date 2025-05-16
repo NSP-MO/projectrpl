@@ -16,6 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import ProtectedRoute from "@/components/protected-route"
+import { createProduct } from "@/lib/admin"
 
 export default function AddProductPage() {
   const router = useRouter()
@@ -84,36 +85,53 @@ export default function AddProductPage() {
     setIsSaving(true)
 
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-
-      // In a real app, you would save the product to the database here
-
-      setSuccess("Produk berhasil ditambahkan!")
-
-      // Reset form after successful submission
-      setProduct({
-        name: "",
-        price: 0,
-        category: "",
-        description: "",
-        status: "published",
-        stock: 0,
-        isPopular: false,
-        careInstructions: {
-          light: "",
-          water: "",
-          soil: "",
-          humidity: "",
-          temperature: "",
-          fertilizer: "",
+      // Prepare the product data for creation
+      const productData = {
+        name: product.name,
+        price: product.price,
+        image: "/placeholder.svg?height=500&width=500", // Default placeholder image
+        category: product.category,
+        description: product.description,
+        is_popular: product.isPopular,
+        care_instructions: product.careInstructions,
+        seller: {
+          name: "BenihKu Official Store",
+          rating: 5.0,
+          response_time: "± 1 jam",
         },
-      })
+      }
 
-      // Redirect to admin dashboard after a short delay
-      setTimeout(() => {
-        router.push("/admin")
-      }, 2000)
+      const { success, error } = await createProduct(productData)
+
+      if (success) {
+        setSuccess("Produk berhasil ditambahkan!")
+
+        // Reset form after successful submission
+        setProduct({
+          name: "",
+          price: 0,
+          category: "",
+          description: "",
+          status: "published",
+          stock: 0,
+          isPopular: false,
+          careInstructions: {
+            light: "",
+            water: "",
+            soil: "",
+            humidity: "",
+            temperature: "",
+            fertilizer: "",
+          },
+        })
+
+        // Redirect to admin dashboard after a short delay
+        setTimeout(() => {
+          router.push("/admin")
+        }, 2000)
+      } else {
+        setError(error || "Terjadi kesalahan saat menyimpan produk. Silakan coba lagi.")
+      }
     } catch (err) {
       setError("Terjadi kesalahan saat menyimpan produk. Silakan coba lagi.")
     } finally {

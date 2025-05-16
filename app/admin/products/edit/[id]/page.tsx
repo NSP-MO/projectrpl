@@ -16,6 +16,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import ProtectedRoute from "@/components/protected-route"
+import { getProductById } from "@/lib/products"
+import { updateProduct } from "@/lib/admin"
 
 // Sample plant data - in a real app, this would come from a database
 const plantsData = [
@@ -61,6 +63,7 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
     id: 0,
     name: "",
     price: 0,
+    image: "",
     category: "",
     description: "",
     status: "published",
@@ -78,32 +81,40 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
 
   // Load product data
   useEffect(() => {
-    const loadProduct = () => {
-      // Simulate API call
-      setTimeout(() => {
-        const foundProduct = plantsData.find((p) => p.id === productId)
-        if (foundProduct) {
+    const loadProduct = async () => {
+      setIsLoading(true)
+      try {
+        const productData = await getProductById(productId)
+
+        if (productData) {
           setProduct({
-            id: foundProduct.id,
-            name: foundProduct.name,
-            price: foundProduct.price,
-            category: foundProduct.category,
-            description: foundProduct.description,
-            status: foundProduct.status || "published",
-            stock: foundProduct.stock || 0,
-            isPopular: foundProduct.isPopular,
+            id: productData.id,
+            name: productData.name,
+            price: productData.price,
+            image: productData.image,
+            category: productData.category,
+            description: productData.description,
+            status: "published", // Default value
+            stock: 0, // Default value
+            isPopular: productData.is_popular,
             careInstructions: {
-              light: foundProduct.careInstructions.light,
-              water: foundProduct.careInstructions.water,
-              soil: foundProduct.careInstructions.soil,
-              humidity: foundProduct.careInstructions.humidity,
-              temperature: foundProduct.careInstructions.temperature,
-              fertilizer: foundProduct.careInstructions.fertilizer,
+              light: productData.care_instructions?.light || "",
+              water: productData.care_instructions?.water || "",
+              soil: productData.care_instructions?.soil || "",
+              humidity: productData.care_instructions?.humidity || "",
+              temperature: productData.care_instructions?.temperature || "",
+              fertilizer: productData.care_instructions?.fertilizer || "",
             },
           })
+        } else {
+          setError("Produk tidak ditemukan")
         }
+      } catch (error) {
+        console.error("Error loading product:", error)
+        setError("Terjadi kesalahan saat memuat data produk")
+      } finally {
         setIsLoading(false)
-      }, 500)
+      }
     }
 
     loadProduct()
@@ -150,12 +161,28 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
     setIsSaving(true)
 
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000))
+      // Prepare the product data for update
+      const productData = {
+        name: product.name,
+        price: product.price,
+        category: product.category,
+        description: product.description,
+        is_popular: product.isPopular,
+        care_instructions: product.careInstructions,
+      }
 
-      // In a real app, you would save the product to the database here
+      const { success, error } = await updateProduct(productId, productData)
 
-      setSuccess("Produk berhasil disimpan!")
+      if (success) {
+        setSuccess("Produk berhasil disimpan!")
+
+        // Optionally redirect back to admin page after a delay
+        setTimeout(() => {
+          router.push("/admin")
+        }, 2000)
+      } else {
+        setError(error || "Terjadi kesalahan saat menyimpan produk. Silakan coba lagi.")
+      }
     } catch (err) {
       setError("Terjadi kesalahan saat menyimpan produk. Silakan coba lagi.")
     } finally {
@@ -217,7 +244,7 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
             </TabsList>
 
             <TabsContent value="basic">
-              <Card>
+              <Card className="dark:border-gray-700">
                 <CardHeader>
                   <CardTitle>Informasi Dasar</CardTitle>
                   <CardDescription>
@@ -228,7 +255,14 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="name">Nama Produk</Label>
-                      <Input id="name" name="name" value={product.name} onChange={handleInputChange} required />
+                      <Input
+                        id="name"
+                        name="name"
+                        value={product.name}
+                        onChange={handleInputChange}
+                        className="dark:bg-gray-800 dark:border-gray-700"
+                        required
+                      />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="price">Harga (Rp)</Label>
@@ -238,6 +272,7 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
                         type="number"
                         value={product.price}
                         onChange={handleInputChange}
+                        className="dark:bg-gray-800 dark:border-gray-700"
                         required
                       />
                     </div>
@@ -247,10 +282,10 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
                     <div className="space-y-2">
                       <Label htmlFor="category">Kategori</Label>
                       <Select value={product.category} onValueChange={(value) => handleSelectChange("category", value)}>
-                        <SelectTrigger>
+                        <SelectTrigger className="dark:bg-gray-800 dark:border-gray-700">
                           <SelectValue placeholder="Pilih kategori" />
                         </SelectTrigger>
-                        <SelectContent>
+                        <SelectContent className="dark:bg-gray-800 dark:border-gray-700">
                           <SelectItem value="Tanaman Hias">Tanaman Hias</SelectItem>
                           <SelectItem value="Tanaman Indoor">Tanaman Indoor</SelectItem>
                           <SelectItem value="Tanaman Outdoor">Tanaman Outdoor</SelectItem>
@@ -267,6 +302,7 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
                         type="number"
                         value={product.stock}
                         onChange={handleInputChange}
+                        className="dark:bg-gray-800 dark:border-gray-700"
                         required
                       />
                     </div>
@@ -276,10 +312,10 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
                     <div className="space-y-2">
                       <Label htmlFor="status">Status</Label>
                       <Select value={product.status} onValueChange={(value) => handleSelectChange("status", value)}>
-                        <SelectTrigger>
+                        <SelectTrigger className="dark:bg-gray-800 dark:border-gray-700">
                           <SelectValue placeholder="Pilih status" />
                         </SelectTrigger>
-                        <SelectContent>
+                        <SelectContent className="dark:bg-gray-800 dark:border-gray-700">
                           <SelectItem value="published">Dipublikasikan</SelectItem>
                           <SelectItem value="draft">Draft</SelectItem>
                         </SelectContent>
@@ -292,7 +328,7 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
                         name="isPopular"
                         checked={product.isPopular}
                         onChange={handleCheckboxChange}
-                        className="h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
+                        className="h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-500 dark:bg-gray-800 dark:border-gray-700"
                       />
                       <Label htmlFor="isPopular">Tandai sebagai produk populer</Label>
                     </div>
@@ -306,6 +342,7 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
                       value={product.description}
                       onChange={handleInputChange}
                       rows={5}
+                      className="dark:bg-gray-800 dark:border-gray-700"
                       required
                     />
                   </div>
@@ -314,7 +351,7 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
             </TabsContent>
 
             <TabsContent value="care">
-              <Card>
+              <Card className="dark:border-gray-700">
                 <CardHeader>
                   <CardTitle>Informasi Perawatan</CardTitle>
                   <CardDescription>
@@ -331,6 +368,7 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
                         value={product.careInstructions.light}
                         onChange={handleCareInstructionsChange}
                         rows={3}
+                        className="dark:bg-gray-800 dark:border-gray-700"
                       />
                     </div>
                     <div className="space-y-2">
@@ -341,6 +379,7 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
                         value={product.careInstructions.water}
                         onChange={handleCareInstructionsChange}
                         rows={3}
+                        className="dark:bg-gray-800 dark:border-gray-700"
                       />
                     </div>
                   </div>
@@ -354,6 +393,7 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
                         value={product.careInstructions.soil}
                         onChange={handleCareInstructionsChange}
                         rows={3}
+                        className="dark:bg-gray-800 dark:border-gray-700"
                       />
                     </div>
                     <div className="space-y-2">
@@ -364,6 +404,7 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
                         value={product.careInstructions.humidity}
                         onChange={handleCareInstructionsChange}
                         rows={3}
+                        className="dark:bg-gray-800 dark:border-gray-700"
                       />
                     </div>
                   </div>
@@ -377,6 +418,7 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
                         value={product.careInstructions.temperature}
                         onChange={handleCareInstructionsChange}
                         rows={3}
+                        className="dark:bg-gray-800 dark:border-gray-700"
                       />
                     </div>
                     <div className="space-y-2">
@@ -387,6 +429,7 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
                         value={product.careInstructions.fertilizer}
                         onChange={handleCareInstructionsChange}
                         rows={3}
+                        className="dark:bg-gray-800 dark:border-gray-700"
                       />
                     </div>
                   </div>
@@ -395,7 +438,7 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
             </TabsContent>
 
             <TabsContent value="images">
-              <Card>
+              <Card className="dark:border-gray-700">
                 <CardHeader>
                   <CardTitle>Gambar Produk</CardTitle>
                   <CardDescription>Unggah gambar produk yang akan ditampilkan kepada pelanggan.</CardDescription>
@@ -403,16 +446,22 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
                 <CardContent>
                   <div className="grid grid-cols-1 gap-4">
                     <div className="border-2 border-dashed rounded-lg p-6 text-center">
-                      <div className="mx-auto w-32 h-32 mb-4 bg-gray-100 rounded-lg flex items-center justify-center">
-                        <img
-                          src={product.id ? `/placeholder.svg?height=300&width=300` : ""}
-                          alt="Preview"
-                          className="max-h-full max-w-full object-contain"
-                        />
+                      <div className="mx-auto w-32 h-32 mb-4 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center overflow-hidden">
+                        {product.id ? (
+                          <img
+                            src={product.image || `/placeholder.svg?height=300&width=300`}
+                            alt="Preview"
+                            className="max-h-full max-w-full object-contain"
+                          />
+                        ) : (
+                          <span className="text-gray-400 dark:text-gray-500">Belum ada gambar</span>
+                        )}
                       </div>
                       <div className="space-y-2">
                         <Button variant="outline">Unggah Gambar</Button>
-                        <p className="text-xs text-gray-500">Format yang didukung: JPG, PNG. Ukuran maksimal: 5MB.</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          Format yang didukung: JPG, PNG. Ukuran maksimal: 5MB.
+                        </p>
                       </div>
                     </div>
                   </div>

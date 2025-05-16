@@ -98,7 +98,7 @@ function ProductsGrid({ products }: { products: Product[] }) {
   if (products.length === 0) {
     return (
       <div className="text-center py-12">
-        <p className="text-gray-500">Tidak ada produk yang ditemukan.</p>
+        <p className="text-muted-foreground">Tidak ada produk yang ditemukan.</p>
       </div>
     )
   }
@@ -107,18 +107,18 @@ function ProductsGrid({ products }: { products: Product[] }) {
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {products.map((product) => (
         <Link key={product.id} href={`/admin/products/edit/${product.id}`}>
-          <Card className="h-full cursor-pointer hover:shadow-md transition-shadow">
+          <Card className="h-full cursor-pointer hover:shadow-md transition-shadow dark:border-gray-800">
             <CardHeader className="pb-2">
               <CardTitle className="text-lg">{product.name}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex justify-between items-center">
                 <div>
-                  <p className="text-sm text-gray-500">{product.category}</p>
+                  <p className="text-sm text-muted-foreground">{product.category}</p>
                   <p className="font-medium">Rp {product.price.toLocaleString("id-ID")}</p>
                 </div>
                 {product.is_popular && (
-                  <span className="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800">
+                  <span className="inline-flex items-center rounded-full bg-green-100 dark:bg-green-900 px-2.5 py-0.5 text-xs font-medium text-green-800 dark:text-green-300">
                     Populer
                   </span>
                 )}

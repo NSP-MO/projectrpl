@@ -53,20 +53,22 @@ export async function getProductById(id: number) {
   const supabase = createServerSupabaseClient()
 
   try {
-    const { data, error } = await supabase.from("products").select("*").eq("id", id).single()
+    // Use .eq() instead of .single() to avoid errors when no rows are found
+    const { data, error } = await supabase.from("products").select("*").eq("id", id)
 
     if (error) {
-      // Check if the error is because the table doesn't exist
-      if (error.message.includes("relation") && error.message.includes("does not exist")) {
-        console.error("Products table does not exist. Please run the setup process.")
-        return null
-      }
-
       console.error(`Error fetching product with id ${id}:`, error)
       return null
     }
 
-    return data as Product
+    // Check if any data was returned
+    if (!data || data.length === 0) {
+      console.log(`No product found with id ${id}`)
+      return null
+    }
+
+    // Return the first matching product
+    return data[0] as Product
   } catch (error) {
     console.error(`Error fetching product with id ${id}:`, error)
     return null
