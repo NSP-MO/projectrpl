@@ -1,26 +1,36 @@
-# E-commerce tanaman website
-
-*Automatically synced with your [v0.dev](https://v0.dev) deployments*
-
-[![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=for-the-badge&logo=vercel)](https://vercel.com/arieffar1903-8596s-projects/v0-e-commerce-tanaman-website-21)
-[![Built with v0](https://img.shields.io/badge/Built%20with-v0.dev-black?style=for-the-badge)](https://v0.dev/chat/projects/0DeURXSGHvf)
+# BenihKu 🌱
 
 ## Overview
+Benihku merupakan website yang diperuntukan untuk membantu para penjual dan pembeli tanaman atau benih dalam mendapatkan informasi yang terkait mengenai tanaman, baik dapat membantu dalam penjualan produk sampai membantu pembeli dalam memilih dan mencari informasi tanaman yang mereka harapkan.
 
-This repository will stay in sync with your deployed chats on [v0.dev](https://v0.dev).
-Any changes you make to your deployed app will be automatically pushed to this repository from [v0.dev](https://v0.dev).
+Website BenihKu ini merupakan website yang berbasis react-typescript dengan Supabase database yang bersifat serverless.
 
 ## Deployment
+Project dapat diakses pada link berikut: **[https://projectrpl2025.vercel.app/](https://projectrpl2025.vercel.app/)**
 
-Your project is live at:
+## How to run locally
+1. Clone this repository 
+```sh
+git clone https://github.com/NSP-MO/projectrpl.git
+cd projectrpl
+```
+2. Install the necessary setup
+```sh
+pnpm i
+```
 
-**[https://vercel.com/arieffar1903-8596s-projects/v0-e-commerce-tanaman-website-21](https://vercel.com/arieffar1903-8596s-projects/v0-e-commerce-tanaman-website-21)**
+3. Run the program
+```sh
+pnpm dev
+```
+
+4. Open the website in your browser at **http://localhost:3000**
 
 ## Build your app
 
 Continue building your app on:
 
-**[https://v0.dev/chat/projects/0DeURXSGHvf](https://v0.dev/chat/projects/0DeURXSGHvf)**
+**[https://v0.dev/chat/fork-of-e-commerce-tanaman-website-syeAQk0zVQk](https://v0.dev/chat/fork-of-e-commerce-tanaman-website-syeAQk0zVQk)**
 
 ## How It Works
 
