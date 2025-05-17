@@ -12,7 +12,7 @@ import { toast } from "@/components/ui/use-toast"
 
 interface ImageUploadProps {
   currentImage?: string
-  onImageUploaded: (url: string, path: string) => void
+  onImageUploaded: (url: string, path: string, bucket?: string) => void
   onError?: (error: string) => void
 }
 
@@ -59,11 +59,7 @@ export function ImageUpload({ currentImage, onImageUploaded, onError }: ImageUpl
       const result = await uploadProductImage(file)
 
       if (result.success && result.url) {
-        onImageUploaded(result.url, result.path)
-        toast({
-          title: "Success",
-          description: "Image uploaded successfully",
-        })
+        onImageUploaded(result.url, result.path, result.bucket)
       } else {
         handleError(result.error || "Failed to upload image")
         // Revert preview if upload failed

@@ -65,6 +65,7 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
   // Add these state variables to the component
   const [uploadedImageUrl, setUploadedImageUrl] = useState<string>("")
   const [uploadedImagePath, setUploadedImagePath] = useState<string>("")
+  const [uploadedImageBucket, setUploadedImageBucket] = useState<string>("")
   const [uploadError, setUploadError] = useState<string>("")
 
   // Product form state
@@ -114,7 +115,7 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
             category: productData.category,
             description: productData.description,
             status: "published", // Default value
-            stock: 0, // Default value
+            stock: productData.stock || 0,
             isPopular: productData.is_popular,
             careInstructions: {
               light: productData.care_instructions?.light || "",
@@ -186,58 +187,73 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
   // Update the handleSubmit function to include the uploaded image
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setIsSubmitting(true)
+    setError("")
+    setSuccess("")
+    setIsSaving(true)
 
     try {
-      const result = await updateProduct({
-        id: product.id,
-        name: formData.name,
-        price: Number.parseFloat(formData.price),
-        description: formData.description,
-        category: formData.category,
-        stock: Number.parseInt(formData.stock),
-        image_url: formData.image_url,
-        image_path: formData.image_path,
-      })
+      // Prepare the product data for update
+      const productData = {
+        name: product.name,
+        price: product.price,
+        category: product.category,
+        description: product.description,
+        is_popular: product.isPopular,
+        stock: product.stock,
+        care_instructions: product.careInstructions,
+        // Include the uploaded image URL if available
+        ...(uploadedImageUrl && { image: uploadedImageUrl }),
+        ...(uploadedImagePath && { image_path: uploadedImagePath }),
+        ...(uploadedImageBucket && { image_bucket: uploadedImageBucket }),
+      }
 
-      if (result.success) {
+      const { success, error } = await updateProduct(productId, productData)
+
+      if (success) {
+        setSuccess("Produk berhasil disimpan!")
         toast({
-          title: "Success",
-          description: "Product updated successfully",
+          title: "Sukses",
+          description: "Produk berhasil disimpan!",
         })
-        router.push("/admin/products")
+
+        // Optionally redirect back to admin page after a delay
+        setTimeout(() => {
+          router.push("/admin/products")
+        }, 2000)
       } else {
+        setError(error || "Terjadi kesalahan saat menyimpan produk. Silakan coba lagi.")
         toast({
           title: "Error",
-          description: result.error || "Failed to update product",
+          description: error || "Terjadi kesalahan saat menyimpan produk. Silakan coba lagi.",
           variant: "destructive",
         })
       }
-    } catch (error: any) {
+    } catch (err) {
+      setError("Terjadi kesalahan saat menyimpan produk. Silakan coba lagi.")
       toast({
         title: "Error",
-        description: error.message || "An unexpected error occurred",
+        description: "Terjadi kesalahan saat menyimpan produk. Silakan coba lagi.",
         variant: "destructive",
       })
     } finally {
-      setIsSubmitting(false)
+      setIsSaving(false)
     }
   }
 
   return (
     <ProtectedRoute adminOnly>
       <div className="container py-12">
-        <Link href="/admin" className="inline-flex items-center mb-6">
+        <Link href="/admin/products" className="inline-flex items-center mb-6">
           <Button variant="ghost" className="p-0">
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Kembali ke Dashboard
+            Kembali ke Daftar Produk
           </Button>
         </Link>
 
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-2xl font-bold">Edit Produk</h1>
           <div className="flex gap-2">
-            <Button variant="outline" onClick={() => router.push("/admin")}>
+            <Button variant="outline" onClick={() => router.push("/admin/products")}>
               Batal
             </Button>
             <Button className="bg-green-600 hover:bg-green-700" onClick={handleSubmit} disabled={isSaving}>
@@ -485,10 +501,22 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
                   )}
                   <ImageUpload
                     currentImage={product.image}
-                    onImageUploaded={(url, path) => {
+                    onImageUploaded={(url, path, bucket) => {
                       setUploadedImageUrl(url)
                       setUploadedImagePath(path)
+                      if (bucket) setUploadedImageBucket(bucket)
                       setUploadError("")
+
+                      // Update product state with the new image URL
+                      setProduct((prev) => ({
+                        ...prev,
+                        image: url,
+                      }))
+
+                      toast({
+                        title: "Sukses",
+                        description: "Gambar berhasil diunggah!",
+                      })
                     }}
                     onError={setUploadError}
                   />
