@@ -60,6 +60,10 @@ export function ImageUpload({ currentImage, onImageUploaded, onError }: ImageUpl
 
       if (result.success && result.url) {
         onImageUploaded(result.url, result.path, result.bucket)
+        toast({
+          title: "Success",
+          description: "Image uploaded successfully",
+        })
       } else {
         handleError(result.error || "Failed to upload image")
         // Revert preview if upload failed
