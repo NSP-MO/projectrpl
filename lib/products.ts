@@ -10,6 +10,9 @@ export type Product = {
   category: string
   description: string
   is_popular: boolean
+  stock?: number
+  image_path?: string
+  image_bucket?: string
   care_instructions?: {
     light: string
     water: string

@@ -89,16 +89,6 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
     },
   })
 
-  const [formData, setFormData] = useState({
-    name: product?.name || "",
-    price: product?.price?.toString() || "",
-    description: product?.description || "",
-    category: product?.category || "",
-    stock: product?.stock?.toString() || "",
-    image_url: product?.image || "",
-    image_path: "",
-  })
-
   // Load product data
   useEffect(() => {
     const loadProduct = async () => {
@@ -109,14 +99,14 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
         if (productData) {
           setProduct({
             id: productData.id,
-            name: productData.name,
-            price: productData.price,
-            image: productData.image,
-            category: productData.category,
-            description: productData.description,
+            name: productData.name || "",
+            price: productData.price || 0,
+            image: productData.image || "",
+            category: productData.category || "",
+            description: productData.description || "",
             status: "published", // Default value
-            stock: productData.stock || 0,
-            isPopular: productData.is_popular,
+            stock: typeof productData.stock === "number" ? productData.stock : 0,
+            isPopular: !!productData.is_popular,
             careInstructions: {
               light: productData.care_instructions?.light || "",
               water: productData.care_instructions?.water || "",
@@ -125,16 +115,6 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
               temperature: productData.care_instructions?.temperature || "",
               fertilizer: productData.care_instructions?.fertilizer || "",
             },
-          })
-
-          setFormData({
-            name: productData?.name || "",
-            price: productData?.price?.toString() || "",
-            description: productData?.description || "",
-            category: productData?.category || "",
-            stock: productData?.stock?.toString() || "",
-            image_url: productData?.image || "",
-            image_path: productData?.image_path || "",
           })
         } else {
           setError("Produk tidak ditemukan")
@@ -192,15 +172,27 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
     setIsSaving(true)
 
     try {
+      // Ensure price and stock are valid numbers
+      const price = typeof product.price === "string" ? Number.parseFloat(product.price) || 0 : product.price || 0
+
+      const stock = typeof product.stock === "string" ? Number.parseInt(product.stock) || 0 : product.stock || 0
+
       // Prepare the product data for update
       const productData = {
-        name: product.name,
-        price: product.price,
-        category: product.category,
-        description: product.description,
-        is_popular: product.isPopular,
-        stock: product.stock,
-        care_instructions: product.careInstructions,
+        name: product.name || "",
+        price: price,
+        category: product.category || "",
+        description: product.description || "",
+        is_popular: !!product.isPopular,
+        stock: stock,
+        care_instructions: product.careInstructions || {
+          light: "",
+          water: "",
+          soil: "",
+          humidity: "",
+          temperature: "",
+          fertilizer: "",
+        },
         // Include the uploaded image URL if available
         ...(uploadedImageUrl && { image: uploadedImageUrl }),
         ...(uploadedImagePath && { image_path: uploadedImagePath }),
@@ -228,11 +220,12 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
           variant: "destructive",
         })
       }
-    } catch (err) {
-      setError("Terjadi kesalahan saat menyimpan produk. Silakan coba lagi.")
+    } catch (err: any) {
+      console.error("Error saving product:", err)
+      setError(err.message || "Terjadi kesalahan saat menyimpan produk. Silakan coba lagi.")
       toast({
         title: "Error",
-        description: "Terjadi kesalahan saat menyimpan produk. Silakan coba lagi.",
+        description: err.message || "Terjadi kesalahan saat menyimpan produk. Silakan coba lagi.",
         variant: "destructive",
       })
     } finally {
