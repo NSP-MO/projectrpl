@@ -4,11 +4,13 @@ import type React from "react"
 
 import { useState, useRef } from "react"
 import Image from "next/image"
-import { Loader2, Upload, X } from "lucide-react"
+import { Loader2, Upload, X, AlertTriangle } from "lucide-react"
+import Link from "next/link"
 
 import { Button } from "@/components/ui/button"
 import { uploadProductImage } from "@/lib/upload"
 import { toast } from "@/components/ui/use-toast"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 
 interface ImageUploadProps {
   currentImage?: string
@@ -19,9 +21,15 @@ interface ImageUploadProps {
 export function ImageUpload({ currentImage, onImageUploaded, onError }: ImageUploadProps) {
   const [isUploading, setIsUploading] = useState(false)
   const [previewUrl, setPreviewUrl] = useState<string | null>(currentImage || null)
+  const [noBuckets, setNoBuckets] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleError = (message: string) => {
+    // Check if the error is about no storage buckets
+    if (message.includes("No storage buckets found") || message.includes("bucket not found")) {
+      setNoBuckets(true)
+    }
+
     if (onError) {
       onError(message)
     } else {
@@ -55,6 +63,7 @@ export function ImageUpload({ currentImage, onImageUploaded, onError }: ImageUpl
 
     // Upload to Supabase
     setIsUploading(true)
+    setNoBuckets(false)
     try {
       const result = await uploadProductImage(file)
 
@@ -91,6 +100,20 @@ export function ImageUpload({ currentImage, onImageUploaded, onError }: ImageUpl
 
   return (
     <div className="space-y-4">
+      {noBuckets && (
+        <Alert variant="destructive" className="mb-4">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>Storage Not Configured</AlertTitle>
+          <AlertDescription>
+            No storage buckets found. Please{" "}
+            <Link href="/admin/setup" className="font-medium underline">
+              set up storage buckets
+            </Link>{" "}
+            before uploading images.
+          </AlertDescription>
+        </Alert>
+      )}
+
       <div className="border-2 border-dashed rounded-lg p-6 text-center">
         <div className="mx-auto w-48 h-48 mb-4 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center overflow-hidden relative">
           {isUploading && (
@@ -136,7 +159,7 @@ export function ImageUpload({ currentImage, onImageUploaded, onError }: ImageUpl
         />
 
         <div className="space-y-2">
-          <Button variant="outline" onClick={triggerFileInput} disabled={isUploading} type="button">
+          <Button variant="outline" onClick={triggerFileInput} disabled={isUploading || noBuckets} type="button">
             {isUploading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />

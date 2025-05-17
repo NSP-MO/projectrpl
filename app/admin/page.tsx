@@ -59,6 +59,13 @@ export default function AdminDashboard() {
                 <Settings className="h-4 w-4" />
                 Pengaturan
               </Link>
+              <Link
+                href="/admin/setup"
+                className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground hover:text-foreground transition-all"
+              >
+                <Settings className="h-4 w-4" />
+                Setup
+              </Link>
             </nav>
           </div>
           <div className="border-t dark:border-gray-800 p-4">

@@ -3,8 +3,8 @@
 import { createServerSupabaseClient } from "@/lib/supabase"
 import { v4 as uuidv4 } from "uuid"
 
-// Function to get an available bucket
-async function getAvailableBucket() {
+// Function to get an available bucket or create one if none exists
+async function getOrCreateBucket() {
   const supabase = createServerSupabaseClient()
 
   try {
@@ -18,16 +18,32 @@ async function getAvailableBucket() {
 
     // If there are existing buckets, use the first one
     if (buckets && buckets.length > 0) {
+      // Check if 'products' bucket exists
+      const productsBucket = buckets.find((bucket) => bucket.name === "products")
+      if (productsBucket) {
+        return { success: true, bucketName: "products" }
+      }
+
+      // If no products bucket but other buckets exist, use the first one
       return { success: true, bucketName: buckets[0].name }
     }
 
-    // If no buckets exist, return an error
-    return {
-      success: false,
-      error: "No storage buckets found. Please contact your administrator to set up storage.",
+    // If no buckets exist, create a products bucket
+    console.log("No buckets found, creating products bucket...")
+    const { data, error } = await supabase.storage.createBucket("products", {
+      public: true,
+      fileSizeLimit: 5242880, // 5MB
+      allowedMimeTypes: ["image/png", "image/jpeg", "image/jpg", "image/webp"],
+    })
+
+    if (error) {
+      console.error("Error creating products bucket:", error)
+      return { success: false, error: error.message }
     }
+
+    return { success: true, bucketName: "products" }
   } catch (error: any) {
-    console.error("Error in getAvailableBucket:", error)
+    console.error("Error in getOrCreateBucket:", error)
     return { success: false, error: error.message }
   }
 }
@@ -36,8 +52,8 @@ export async function uploadProductImage(file: File) {
   try {
     const supabase = createServerSupabaseClient()
 
-    // Get an available bucket
-    const bucketResult = await getAvailableBucket()
+    // Get or create a bucket
+    const bucketResult = await getOrCreateBucket()
     if (!bucketResult.success) {
       return { success: false, error: bucketResult.error }
     }
@@ -87,7 +103,7 @@ export async function deleteProductImage(filePath: string, bucketName?: string) 
 
     // If no bucket name is provided, try to get an available one
     if (!bucketName) {
-      const bucketResult = await getAvailableBucket()
+      const bucketResult = await getOrCreateBucket()
       if (!bucketResult.success) {
         return { success: false, error: bucketResult.error }
       }
@@ -112,8 +128,8 @@ export async function uploadProfileImage(file: File, userId: string) {
   try {
     const supabase = createServerSupabaseClient()
 
-    // Get an available bucket
-    const bucketResult = await getAvailableBucket()
+    // Get or create a bucket
+    const bucketResult = await getOrCreateBucket()
     if (!bucketResult.success) {
       return { success: false, error: bucketResult.error }
     }

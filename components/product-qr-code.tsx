@@ -35,32 +35,40 @@ export default function ProductQRCode({ productId, productName }: ProductQRCodeP
     })
   }
 
-  const handleDownloadQR = () => {
-    const canvas = document.getElementById("product-qr-code") as HTMLCanvasElement
-    if (!canvas) return
+  // Let's use the simplest possible approach for QR code download
+  const handleDownloadQR = async () => {
+    try {
+      // Generate QR code URL
+      const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(productUrl)}`
 
-    // Convert the SVG to a canvas element
-    const svgElement = document.getElementById("qr-svg")
-    if (!svgElement) return
+      // Fetch the image as a blob
+      const response = await fetch(qrCodeUrl)
+      const blob = await response.blob()
 
-    const svgData = new XMLSerializer().serializeToString(svgElement)
-    const canvas2 = document.createElement("canvas")
-    const ctx = canvas2.getContext("2d")
-    const img = new Image()
-
-    img.onload = () => {
-      canvas2.width = img.width
-      canvas2.height = img.height
-      ctx?.drawImage(img, 0, 0)
-
-      // Create download link
+      // Create a blob URL and trigger download
+      const blobUrl = URL.createObjectURL(blob)
       const link = document.createElement("a")
+      link.href = blobUrl
       link.download = `${productName.replace(/\s+/g, "-").toLowerCase()}-qr-code.png`
-      link.href = canvas2.toDataURL("image/png")
+      document.body.appendChild(link)
       link.click()
-    }
 
-    img.src = "data:image/svg+xml;base64," + btoa(svgData)
+      // Clean up
+      document.body.removeChild(link)
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 100)
+
+      toast({
+        title: "Success",
+        description: "QR code berhasil diunduh.",
+      })
+    } catch (error) {
+      console.error("Error downloading QR code:", error)
+      toast({
+        title: "Error",
+        description: "QR code tidak dapat diunduh.",
+        variant: "destructive",
+      })
+    }
   }
 
   return (

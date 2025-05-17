@@ -23,6 +23,7 @@ import {
 import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import ProductQRCode from "@/components/product-qr-code"
 import Header from "@/components/header"
 import { useAuth } from "@/contexts/auth-context"
@@ -180,7 +181,7 @@ export default function ProductPage({ params }: { params: { id: string } }) {
         <div className="grid gap-8 md:grid-cols-2">
           <div className="relative">
             <Image
-              src={product.image || "/placeholder.svg"}
+              src={product.image || "/placeholder.svg?height=500&width=500"}
               alt={product.name}
               width={500}
               height={500}
@@ -214,15 +215,9 @@ export default function ProductPage({ params }: { params: { id: string } }) {
 
             <div className="mb-6">
               <div className="flex items-center gap-2 mb-4">
-                <div className="h-10 w-10 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
-                  <Image
-                    src="/placeholder-user.jpg"
-                    alt={seller.name}
-                    width={32}
-                    height={32}
-                    className="rounded-full"
-                  />
-                </div>
+                <Avatar className="h-10 w-10">
+                  <AvatarFallback>{seller.name.charAt(0).toUpperCase()}</AvatarFallback>
+                </Avatar>
                 <div>
                   <p className="font-medium">{seller.name}</p>
                   <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
