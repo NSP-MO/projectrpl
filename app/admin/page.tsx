@@ -1,13 +1,14 @@
 "use client"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { Leaf, Plus, Settings, Package, Users, LogOut, BarChart3 } from "lucide-react"
+import { Leaf, Plus, Settings, Package, Users, LogOut, BarChart3, Database } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import ProtectedRoute from "@/components/protected-route"
 import { useAuth } from "@/contexts/auth-context"
 import { ThemeToggle } from "@/components/theme-toggle"
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 
 export default function AdminDashboard() {
   const { user, logout } = useAuth()
@@ -118,6 +119,24 @@ export default function AdminDashboard() {
                 </Button>
               </Link>
             </div>
+
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Database</CardTitle>
+                  <Database className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">Manajemen</div>
+                </CardContent>
+                <CardFooter>
+                  <Button asChild className="w-full bg-green-600 hover:bg-green-700">
+                    <Link href="/admin/database">Kelola Database</Link>
+                  </Button>
+                </CardFooter>
+              </Card>
+            </div>
+
             <Tabs defaultValue="all" className="w-full">
               <TabsList>
                 <TabsTrigger value="all">Semua Produk</TabsTrigger>
