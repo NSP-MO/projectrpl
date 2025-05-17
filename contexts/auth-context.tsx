@@ -36,7 +36,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           console.error("Error getting session:", error)
         } else if (session) {
           setSession(session)
-          setUser(session.user)
+
+          // Get the user's profile data
+          const { data: profileData } = await supabase
+            .from("profiles")
+            .select("avatar_url")
+            .eq("id", session.user.id)
+            .single()
+
+          // If profile data exists with avatar_url, add it to user metadata
+          if (profileData && profileData.avatar_url) {
+            const updatedUser = {
+              ...session.user,
+              user_metadata: {
+                ...session.user.user_metadata,
+                avatar_url: profileData.avatar_url,
+              },
+            }
+            setUser(updatedUser)
+          } else {
+            setUser(session.user)
+          }
         }
       } catch (error) {
         console.error("Error initializing auth:", error)
@@ -51,8 +71,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
-      setSession(session)
-      setUser(session?.user || null)
+      if (session) {
+        // Get the user's profile data
+        const { data: profileData } = await supabase
+          .from("profiles")
+          .select("avatar_url")
+          .eq("id", session.user.id)
+          .single()
+
+        // If profile data exists with avatar_url, add it to user metadata
+        if (profileData && profileData.avatar_url) {
+          const updatedUser = {
+            ...session.user,
+            user_metadata: {
+              ...session.user.user_metadata,
+              avatar_url: profileData.avatar_url,
+            },
+          }
+          setUser(updatedUser)
+        } else {
+          setUser(session?.user || null)
+        }
+
+        setSession(session)
+      } else {
+        setUser(null)
+        setSession(null)
+      }
       setIsLoading(false)
     })
 

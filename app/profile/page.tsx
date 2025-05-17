@@ -117,6 +117,17 @@ export default function ProfilePage() {
         throw error
       }
 
+      // Update the user metadata with the new avatar_url
+      if (profileData.avatar_url) {
+        try {
+          await supabase.auth.updateUser({
+            data: { avatar_url: profileData.avatar_url },
+          })
+        } catch (err) {
+          console.error("Error updating user metadata:", err)
+        }
+      }
+
       toast({
         title: "Success",
         description: "Profile updated successfully",

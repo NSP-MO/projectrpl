@@ -64,13 +64,24 @@ export default function Header() {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="icon" className="rounded-full">
-                    <div className="h-8 w-8 rounded-full bg-green-100 dark:bg-green-900 flex items-center justify-center">
-                      <span className="text-sm font-medium text-green-600 dark:text-green-300">
-                        {user?.user_metadata?.name
-                          ? user.user_metadata.name.charAt(0).toUpperCase()
-                          : user?.email?.charAt(0).toUpperCase() || "U"}
-                      </span>
-                    </div>
+                    {user?.user_metadata?.avatar_url ? (
+                      <div className="h-8 w-8 rounded-full overflow-hidden">
+                        <img
+                          src={user.user_metadata.avatar_url || "/placeholder.svg"}
+                          alt="Profile"
+                          className="h-full w-full object-cover"
+                          crossOrigin="anonymous"
+                        />
+                      </div>
+                    ) : (
+                      <div className="h-8 w-8 rounded-full bg-green-100 dark:bg-green-900 flex items-center justify-center">
+                        <span className="text-sm font-medium text-green-600 dark:text-green-300">
+                          {user?.user_metadata?.name
+                            ? user.user_metadata.name.charAt(0).toUpperCase()
+                            : user?.email?.charAt(0).toUpperCase() || "U"}
+                        </span>
+                      </div>
+                    )}
                     <span className="sr-only">Menu Pengguna</span>
                   </Button>
                 </DropdownMenuTrigger>
