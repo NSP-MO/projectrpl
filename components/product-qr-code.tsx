@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useRef } from "react"
 import { QRCodeSVG } from "qrcode.react"
 import { Copy, Download, Share2 } from "lucide-react"
 
@@ -22,6 +22,7 @@ interface ProductQRCodeProps {
 
 export default function ProductQRCode({ productId, productName }: ProductQRCodeProps) {
   const [open, setOpen] = useState(false)
+  const qrRef = useRef<HTMLDivElement>(null)
 
   // Generate the full URL for the product
   const productUrl =
@@ -36,32 +37,18 @@ export default function ProductQRCode({ productId, productName }: ProductQRCodeP
   }
 
   const handleDownloadQR = () => {
-    try {
-      // Create a direct link to QR code generator service
-      const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(productUrl)}`
+    // Create a link element to download the QR code
+    const downloadLink = document.createElement("a")
+    downloadLink.href = `/api/generate-qr?url=${encodeURIComponent(productUrl)}&name=${encodeURIComponent(productName)}`
+    downloadLink.download = `${productName.replace(/\s+/g, "-").toLowerCase()}-qr-code.png`
+    document.body.appendChild(downloadLink)
+    downloadLink.click()
+    document.body.removeChild(downloadLink)
 
-      // Create a temporary anchor element
-      const link = document.createElement("a")
-      link.href = qrCodeUrl
-      link.download = `${productName.replace(/\s+/g, "-").toLowerCase()}-qr-code.png`
-
-      // Append to body, click, and remove
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
-
-      toast({
-        title: "QR Code Downloaded",
-        description: "QR code has been downloaded successfully.",
-      })
-    } catch (error) {
-      console.error("Error with QR code:", error)
-      toast({
-        title: "Error",
-        description: "Couldn't download QR code. Please try again.",
-        variant: "destructive",
-      })
-    }
+    toast({
+      title: "QR Code Downloaded",
+      description: "QR code has been downloaded successfully.",
+    })
   }
 
   return (
@@ -78,7 +65,7 @@ export default function ProductQRCode({ productId, productName }: ProductQRCodeP
           <DialogDescription>Scan QR code ini untuk melihat {productName} atau bagikan link produk.</DialogDescription>
         </DialogHeader>
         <div className="flex flex-col items-center justify-center p-4">
-          <div className="bg-white p-4 rounded-lg mb-4">
+          <div className="bg-white p-4 rounded-lg mb-4" ref={qrRef}>
             <QRCodeSVG
               id="qr-svg"
               value={productUrl}
