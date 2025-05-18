@@ -11,6 +11,9 @@ type AuthContextType = {
   signup: (name: string, email: string, password: string) => Promise<{ success: boolean; error?: string }>
   logout: () => Promise<void>
   isLoading: boolean
+  signInWithGoogle: () => Promise<{ success: boolean; error?: string }>
+  resetPassword: (email: string) => Promise<{ success: boolean; error?: string }>
+  updateUserPassword: (newPassword: string) => Promise<{ success: boolean; error?: string }>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -184,6 +187,60 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  // Google sign-in function
+  const signInWithGoogle = async () => {
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: typeof window !== "undefined" ? `${window.location.origin}/auth/callback` : undefined,
+        },
+      })
+
+      if (error) {
+        return { success: false, error: error.message }
+      }
+
+      return { success: true }
+    } catch (error: any) {
+      return { success: false, error: error.message || "Terjadi kesalahan saat login dengan Google" }
+    }
+  }
+
+  // Add resetPassword function
+  const resetPassword = async (email: string) => {
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: typeof window !== "undefined" ? `${window.location.origin}/auth/reset-password` : undefined,
+      })
+
+      if (error) {
+        return { success: false, error: error.message }
+      }
+
+      return { success: true }
+    } catch (error: any) {
+      return { success: false, error: error.message || "Terjadi kesalahan saat mengirim email reset password" }
+    }
+  }
+
+  // Add updateUserPassword function
+  const updateUserPassword = async (newPassword: string) => {
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword,
+      })
+
+      if (error) {
+        return { success: false, error: error.message }
+      }
+
+      return { success: true }
+    } catch (error: any) {
+      return { success: false, error: error.message || "Terjadi kesalahan saat mengubah password" }
+    }
+  }
+
   // Logout function
   const logout = async () => {
     try {
@@ -202,6 +259,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         signup,
         logout,
         isLoading,
+        signInWithGoogle,
+        resetPassword,
+        updateUserPassword,
       }}
     >
       {children}
