@@ -13,7 +13,7 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { useAuth } from "@/contexts/auth-context"
-import { toast } from "sonner"
+import { toast } from "@/components/ui/use-toast"
 
 export default function LoginPage() {
   const router = useRouter()
@@ -36,7 +36,8 @@ export default function LoginPage() {
       if (success) {
         console.log("Login successful, preparing to redirect")
         // Check if we need to redirect to a specific page
-        const returnUrl = new URLSearchParams(window.location.search).get("returnUrl")
+        const returnUrl =
+          typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("returnUrl") : null
         const redirectTo = returnUrl || "/"
         console.log("Redirecting to:", redirectTo)
 
@@ -46,8 +47,8 @@ export default function LoginPage() {
           description: "You have been logged in successfully.",
         })
 
-        // Use router.push directly without setTimeout
-        router.push(redirectTo)
+        // Force a hard navigation to avoid Firefox issues
+        window.location.href = redirectTo
       } else {
         console.error("Login failed:", error)
         setError(error || "Email atau password salah. Silakan coba lagi.")

@@ -45,7 +45,8 @@ export default function SignupPage() {
       if (success) {
         console.log("Signup successful, preparing to redirect")
         // Check if we need to redirect to a specific page
-        const returnUrl = new URLSearchParams(window.location.search).get("returnUrl")
+        const returnUrl =
+          typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("returnUrl") : null
         const redirectTo = returnUrl || "/"
         console.log("Redirecting to:", redirectTo)
 
@@ -55,8 +56,8 @@ export default function SignupPage() {
           description: "Your account has been created successfully.",
         })
 
-        // Use router.push directly without setTimeout
-        router.push(redirectTo)
+        // Force a hard navigation to avoid Firefox issues
+        window.location.href = redirectTo
       } else {
         console.error("Signup failed:", error)
         setError(error || "Email sudah terdaftar. Silakan gunakan email lain.")
