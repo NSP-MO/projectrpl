@@ -35,37 +35,30 @@ export default function ProductQRCode({ productId, productName }: ProductQRCodeP
     })
   }
 
-  // Let's use the simplest possible approach for QR code download
-  const handleDownloadQR = async () => {
+  const handleDownloadQR = () => {
     try {
-      // Generate QR code URL
+      // Create a direct link to QR code generator service
       const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(productUrl)}`
 
-      // Fetch the image as a blob
-      const response = await fetch(qrCodeUrl)
-      const blob = await response.blob()
-
-      // Create a blob URL and trigger download
-      const blobUrl = URL.createObjectURL(blob)
+      // Create a temporary anchor element
       const link = document.createElement("a")
-      link.href = blobUrl
+      link.href = qrCodeUrl
       link.download = `${productName.replace(/\s+/g, "-").toLowerCase()}-qr-code.png`
+
+      // Append to body, click, and remove
       document.body.appendChild(link)
       link.click()
-
-      // Clean up
       document.body.removeChild(link)
-      setTimeout(() => URL.revokeObjectURL(blobUrl), 100)
 
       toast({
-        title: "Success",
-        description: "QR code berhasil diunduh.",
+        title: "QR Code Downloaded",
+        description: "QR code has been downloaded successfully.",
       })
     } catch (error) {
-      console.error("Error downloading QR code:", error)
+      console.error("Error with QR code:", error)
       toast({
         title: "Error",
-        description: "QR code tidak dapat diunduh.",
+        description: "Couldn't download QR code. Please try again.",
         variant: "destructive",
       })
     }
