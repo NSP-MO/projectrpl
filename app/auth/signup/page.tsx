@@ -37,16 +37,26 @@ export default function SignupPage() {
     setIsLoading(true)
 
     try {
+      console.log("Attempting signup with:", email)
       const { success, error } = await signup(name, email, password)
 
       if (success) {
+        console.log("Signup successful, preparing to redirect")
         // Redirect to home or previous page
         const returnUrl = new URLSearchParams(window.location.search).get("returnUrl")
-        router.push(returnUrl || "/")
+        const redirectTo = returnUrl || "/"
+        console.log("Redirecting to:", redirectTo)
+
+        // Add a small delay to ensure auth state is updated
+        setTimeout(() => {
+          router.push(redirectTo)
+        }, 500)
       } else {
+        console.error("Signup failed:", error)
         setError(error || "Email sudah terdaftar. Silakan gunakan email lain.")
       }
     } catch (err) {
+      console.error("Exception during signup:", err)
       setError("Terjadi kesalahan. Silakan coba lagi.")
     } finally {
       setIsLoading(false)

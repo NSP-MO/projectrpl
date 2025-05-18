@@ -28,16 +28,26 @@ export default function LoginPage() {
     setIsLoading(true)
 
     try {
+      console.log("Attempting login with:", email)
       const { success, error } = await login(email, password)
 
       if (success) {
+        console.log("Login successful, preparing to redirect")
         // Check if we need to redirect to a specific page
         const returnUrl = new URLSearchParams(window.location.search).get("returnUrl")
-        router.push(returnUrl || "/")
+        const redirectTo = returnUrl || "/"
+        console.log("Redirecting to:", redirectTo)
+
+        // Add a small delay to ensure auth state is updated
+        setTimeout(() => {
+          router.push(redirectTo)
+        }, 500)
       } else {
+        console.error("Login failed:", error)
         setError(error || "Email atau password salah. Silakan coba lagi.")
       }
     } catch (err) {
+      console.error("Exception during login:", err)
       setError("Terjadi kesalahan. Silakan coba lagi.")
     } finally {
       setIsLoading(false)

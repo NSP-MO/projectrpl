@@ -34,28 +34,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         if (error) {
           console.error("Error getting session:", error)
-        } else if (session) {
+          setIsLoading(false) // Make sure to set loading to false even on error
+          return
+        }
+
+        if (session) {
           setSession(session)
+          setUser(session.user)
 
-          // Get the user's profile data
-          const { data: profileData } = await supabase
-            .from("profiles")
-            .select("avatar_url")
-            .eq("id", session.user.id)
-            .single()
+          // Try to get profile data, but don't block authentication if it fails
+          try {
+            const { data: profileData } = await supabase
+              .from("profiles")
+              .select("avatar_url")
+              .eq("id", session.user.id)
+              .single()
 
-          // If profile data exists with avatar_url, add it to user metadata
-          if (profileData && profileData.avatar_url) {
-            const updatedUser = {
-              ...session.user,
-              user_metadata: {
-                ...session.user.user_metadata,
-                avatar_url: profileData.avatar_url,
-              },
+            // If profile data exists with avatar_url, add it to user metadata
+            if (profileData && profileData.avatar_url) {
+              const updatedUser = {
+                ...session.user,
+                user_metadata: {
+                  ...session.user.user_metadata,
+                  avatar_url: profileData.avatar_url,
+                },
+              }
+              setUser(updatedUser)
             }
-            setUser(updatedUser)
-          } else {
-            setUser(session.user)
+          } catch (profileError) {
+            console.error("Error fetching profile data:", profileError)
+            // Continue with authentication even if profile fetch fails
           }
         }
       } catch (error) {
@@ -71,33 +79,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log("Auth state changed:", event, session ? "Session exists" : "No session")
+
       if (session) {
-        // Get the user's profile data
-        const { data: profileData } = await supabase
-          .from("profiles")
-          .select("avatar_url")
-          .eq("id", session.user.id)
-          .single()
-
-        // If profile data exists with avatar_url, add it to user metadata
-        if (profileData && profileData.avatar_url) {
-          const updatedUser = {
-            ...session.user,
-            user_metadata: {
-              ...session.user.user_metadata,
-              avatar_url: profileData.avatar_url,
-            },
-          }
-          setUser(updatedUser)
-        } else {
-          setUser(session?.user || null)
-        }
-
+        setUser(session.user)
         setSession(session)
+
+        // Try to get profile data, but don't block authentication flow
+        try {
+          const { data: profileData } = await supabase
+            .from("profiles")
+            .select("avatar_url")
+            .eq("id", session.user.id)
+            .single()
+
+          if (profileData && profileData.avatar_url) {
+            const updatedUser = {
+              ...session.user,
+              user_metadata: {
+                ...session.user.user_metadata,
+                avatar_url: profileData.avatar_url,
+              },
+            }
+            setUser(updatedUser)
+          }
+        } catch (error) {
+          console.error("Error fetching profile data:", error)
+          // Continue with authentication even if profile fetch fails
+        }
       } else {
         setUser(null)
         setSession(null)
       }
+
       setIsLoading(false)
     })
 
@@ -109,24 +123,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Login function
   const login = async (email: string, password: string) => {
     try {
+      setIsLoading(true)
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       })
 
       if (error) {
+        console.error("Login error:", error)
         return { success: false, error: error.message }
       }
 
       return { success: true }
     } catch (error: any) {
+      console.error("Exception during login:", error)
       return { success: false, error: error.message || "Terjadi kesalahan saat login" }
+    } finally {
+      setIsLoading(false)
     }
   }
 
   // Signup function
   const signup = async (name: string, email: string, password: string) => {
     try {
+      setIsLoading(true)
       // Register new user
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -140,6 +160,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       })
 
       if (error) {
+        console.error("Signup error:", error)
         return { success: false, error: error.message }
       }
 
@@ -172,15 +193,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
           if (profileError) {
             console.error("Error creating profile:", profileError)
+            // Continue with signup even if profile creation fails
           }
         } catch (err) {
           console.error("Error setting up profile:", err)
+          // Continue with signup even if profile setup fails
         }
       }
 
       return { success: true }
     } catch (error: any) {
+      console.error("Exception during signup:", error)
       return { success: false, error: error.message || "Terjadi kesalahan saat mendaftar" }
+    } finally {
+      setIsLoading(false)
     }
   }
 

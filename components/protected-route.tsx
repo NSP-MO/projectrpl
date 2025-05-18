@@ -20,9 +20,11 @@ export default function ProtectedRoute({ children, adminOnly = false }: Protecte
     if (!isLoading) {
       if (!user) {
         // Redirect to login if not authenticated
+        console.log("User not authenticated, redirecting to login")
         router.push(`/auth/login?returnUrl=${encodeURIComponent(window.location.pathname)}`)
       } else if (adminOnly && user.user_metadata?.role !== "admin") {
         // Redirect to home if not admin
+        console.log("User is not admin, redirecting to home")
         router.push("/")
       }
     }
@@ -32,12 +34,17 @@ export default function ProtectedRoute({ children, adminOnly = false }: Protecte
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Loader2 className="h-8 w-8 animate-spin text-green-600" />
+        <span className="ml-2 text-sm text-gray-500">Loading...</span>
       </div>
     )
   }
 
   // Only render children if authenticated and has proper permissions
-  if (!user || (adminOnly && user.user_metadata?.role !== "admin")) {
+  if (!user) {
+    return null
+  }
+
+  if (adminOnly && user.user_metadata?.role !== "admin") {
     return null
   }
 
