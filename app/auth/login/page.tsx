@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { useAuth } from "@/contexts/auth-context"
+import { toast } from "sonner"
 
 export default function LoginPage() {
   const router = useRouter()
@@ -22,6 +23,7 @@ export default function LoginPage() {
   const [error, setError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
 
+  // Update the handleSubmit function to fix the redirect issue
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
@@ -38,10 +40,14 @@ export default function LoginPage() {
         const redirectTo = returnUrl || "/"
         console.log("Redirecting to:", redirectTo)
 
-        // Add a small delay to ensure auth state is updated
-        setTimeout(() => {
-          router.push(redirectTo)
-        }, 500)
+        // Use toast to notify user
+        toast({
+          title: "Login successful",
+          description: "You have been logged in successfully.",
+        })
+
+        // Use router.push directly without setTimeout
+        router.push(redirectTo)
       } else {
         console.error("Login failed:", error)
         setError(error || "Email atau password salah. Silakan coba lagi.")

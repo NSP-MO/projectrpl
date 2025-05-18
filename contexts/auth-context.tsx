@@ -134,6 +134,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return { success: false, error: error.message }
       }
 
+      // Set user and session immediately to avoid state lag
+      if (data.user && data.session) {
+        setUser(data.user)
+        setSession(data.session)
+      }
+
       return { success: true }
     } catch (error: any) {
       console.error("Exception during login:", error)
@@ -162,6 +168,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (error) {
         console.error("Signup error:", error)
         return { success: false, error: error.message }
+      }
+
+      // Set user and session immediately to avoid state lag
+      if (data.user && data.session) {
+        setUser(data.user)
+        setSession(data.session)
       }
 
       // If successful, add user profile data

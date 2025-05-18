@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { useAuth } from "@/contexts/auth-context"
+import { toast } from "@/components/ui/use-toast"
 
 export default function SignupPage() {
   const router = useRouter()
@@ -24,6 +25,7 @@ export default function SignupPage() {
   const [error, setError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
 
+  // Update the handleSubmit function to fix the redirect issue
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
@@ -42,15 +44,19 @@ export default function SignupPage() {
 
       if (success) {
         console.log("Signup successful, preparing to redirect")
-        // Redirect to home or previous page
+        // Check if we need to redirect to a specific page
         const returnUrl = new URLSearchParams(window.location.search).get("returnUrl")
         const redirectTo = returnUrl || "/"
         console.log("Redirecting to:", redirectTo)
 
-        // Add a small delay to ensure auth state is updated
-        setTimeout(() => {
-          router.push(redirectTo)
-        }, 500)
+        // Use toast to notify user
+        toast({
+          title: "Signup successful",
+          description: "Your account has been created successfully.",
+        })
+
+        // Use router.push directly without setTimeout
+        router.push(redirectTo)
       } else {
         console.error("Signup failed:", error)
         setError(error || "Email sudah terdaftar. Silakan gunakan email lain.")
