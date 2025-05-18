@@ -16,54 +16,31 @@ import { useAuth } from "@/contexts/auth-context"
 
 export default function LoginPage() {
   const router = useRouter()
-  const { login, signInWithGoogle } = useAuth()
+  const { login } = useAuth()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
-  const [isGoogleLoading, setIsGoogleLoading] = useState(false)
 
-  // Update the handleSubmit function to better handle errors and show more feedback
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
     setIsLoading(true)
 
     try {
-      console.log("Attempting to login with email:", email)
       const { success, error } = await login(email, password)
 
       if (success) {
-        console.log("Login successful, redirecting...")
         // Check if we need to redirect to a specific page
         const returnUrl = new URLSearchParams(window.location.search).get("returnUrl")
         router.push(returnUrl || "/")
       } else {
-        console.error("Login failed:", error)
         setError(error || "Email atau password salah. Silakan coba lagi.")
       }
-    } catch (err: any) {
-      console.error("Unexpected error during login:", err)
-      setError("Terjadi kesalahan. Silakan coba lagi. " + (err.message || ""))
+    } catch (err) {
+      setError("Terjadi kesalahan. Silakan coba lagi.")
     } finally {
       setIsLoading(false)
-    }
-  }
-
-  const handleGoogleSignIn = async () => {
-    setError("")
-    setIsGoogleLoading(true)
-
-    try {
-      const { success, error } = await signInWithGoogle()
-
-      if (!success) {
-        setError(error || "Terjadi kesalahan saat login dengan Google")
-      }
-    } catch (err) {
-      setError("Terjadi kesalahan saat login dengan Google")
-    } finally {
-      setIsGoogleLoading(false)
     }
   }
 
@@ -133,29 +110,6 @@ export default function LoginPage() {
             </form>
           </CardContent>
           <CardFooter className="flex flex-col">
-            <div className="relative my-4">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t" />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-background px-2 text-muted-foreground">Atau login dengan</span>
-              </div>
-            </div>
-
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full"
-              onClick={handleGoogleSignIn}
-              disabled={isGoogleLoading}
-            >
-              {isGoogleLoading ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <span className="mr-2 text-blue-500 font-bold">G</span>
-              )}
-              Google
-            </Button>
             <div className="text-center text-sm mt-2">
               Belum punya akun?{" "}
               <Link href="/auth/signup" className="text-green-600 hover:underline">
