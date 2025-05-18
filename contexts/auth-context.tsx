@@ -29,6 +29,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setIsLoading(true)
 
       try {
+        console.log("Initializing auth...")
         // Check for existing session
         const {
           data: { session },
@@ -38,8 +39,56 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (error) {
           console.error("Error getting session:", error)
         } else if (session) {
+          console.log("Session found:", session)
           setSession(session)
 
+          // Get the user's profile data
+          try {
+            const { data: profileData } = await supabase
+              .from("profiles")
+              .select("avatar_url")
+              .eq("id", session.user.id)
+              .single()
+
+            // If profile data exists with avatar_url, add it to user metadata
+            if (profileData && profileData.avatar_url) {
+              const updatedUser = {
+                ...session.user,
+                user_metadata: {
+                  ...session.user.user_metadata,
+                  avatar_url: profileData.avatar_url,
+                },
+              }
+              setUser(updatedUser)
+            } else {
+              setUser(session.user)
+            }
+          } catch (profileError) {
+            console.error("Error fetching profile:", profileError)
+            setUser(session.user)
+          }
+        } else {
+          console.log("No session found")
+          setUser(null)
+          setSession(null)
+        }
+      } catch (error) {
+        console.error("Error initializing auth:", error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    initializeAuth()
+
+    // Set up listener for auth changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log("Auth state changed:", event, session ? "session exists" : "no session")
+
+      if (session) {
+        try {
           // Get the user's profile data
           const { data: profileData } = await supabase
             .from("profiles")
@@ -58,45 +107,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             }
             setUser(updatedUser)
           } else {
-            setUser(session.user)
+            setUser(session?.user || null)
           }
-        }
-      } catch (error) {
-        console.error("Error initializing auth:", error)
-      } finally {
-        setIsLoading(false)
-      }
-    }
 
-    initializeAuth()
-
-    // Set up listener for auth changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (session) {
-        // Get the user's profile data
-        const { data: profileData } = await supabase
-          .from("profiles")
-          .select("avatar_url")
-          .eq("id", session.user.id)
-          .single()
-
-        // If profile data exists with avatar_url, add it to user metadata
-        if (profileData && profileData.avatar_url) {
-          const updatedUser = {
-            ...session.user,
-            user_metadata: {
-              ...session.user.user_metadata,
-              avatar_url: profileData.avatar_url,
-            },
-          }
-          setUser(updatedUser)
-        } else {
+          setSession(session)
+        } catch (error) {
+          console.error("Error updating user after auth change:", error)
           setUser(session?.user || null)
+          setSession(session)
         }
-
-        setSession(session)
       } else {
         setUser(null)
         setSession(null)
@@ -112,17 +131,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Login function
   const login = async (email: string, password: string) => {
     try {
+      console.log("Attempting login with email:", email)
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       })
 
       if (error) {
+        console.error("Login error:", error)
         return { success: false, error: error.message }
       }
 
+      console.log("Login successful:", data)
       return { success: true }
     } catch (error: any) {
+      console.error("Unexpected login error:", error)
       return { success: false, error: error.message || "Terjadi kesalahan saat login" }
     }
   }

@@ -23,23 +23,28 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [isGoogleLoading, setIsGoogleLoading] = useState(false)
 
+  // Update the handleSubmit function to better handle errors and show more feedback
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
     setIsLoading(true)
 
     try {
+      console.log("Attempting to login with email:", email)
       const { success, error } = await login(email, password)
 
       if (success) {
+        console.log("Login successful, redirecting...")
         // Check if we need to redirect to a specific page
         const returnUrl = new URLSearchParams(window.location.search).get("returnUrl")
         router.push(returnUrl || "/")
       } else {
+        console.error("Login failed:", error)
         setError(error || "Email atau password salah. Silakan coba lagi.")
       }
-    } catch (err) {
-      setError("Terjadi kesalahan. Silakan coba lagi.")
+    } catch (err: any) {
+      console.error("Unexpected error during login:", err)
+      setError("Terjadi kesalahan. Silakan coba lagi. " + (err.message || ""))
     } finally {
       setIsLoading(false)
     }
