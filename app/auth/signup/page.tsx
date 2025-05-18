@@ -25,7 +25,7 @@ export default function SignupPage() {
   const [error, setError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
 
-  // Update the handleSubmit function to fix the redirect issue
+  // Completely replace the handleSubmit function with this more reliable version
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
@@ -44,20 +44,25 @@ export default function SignupPage() {
 
       if (success) {
         console.log("Signup successful, preparing to redirect")
-        // Check if we need to redirect to a specific page
-        const returnUrl =
-          typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("returnUrl") : null
-        const redirectTo = returnUrl || "/"
-        console.log("Redirecting to:", redirectTo)
 
-        // Use toast to notify user
+        // Show success message
         toast({
           title: "Signup successful",
           description: "Your account has been created successfully.",
         })
 
-        // Force a hard navigation to avoid Firefox issues
-        window.location.href = redirectTo
+        // Get return URL if any
+        const returnUrl =
+          typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("returnUrl") : null
+        const redirectTo = returnUrl || "/"
+
+        // Short delay to ensure toast is visible and auth state is updated
+        setTimeout(() => {
+          // Force a hard navigation
+          if (typeof window !== "undefined") {
+            window.location.href = redirectTo
+          }
+        }, 500)
       } else {
         console.error("Signup failed:", error)
         setError(error || "Email sudah terdaftar. Silakan gunakan email lain.")

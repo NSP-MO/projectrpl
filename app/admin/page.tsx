@@ -14,9 +14,9 @@ export default function AdminDashboard() {
   const { user, logout } = useAuth()
   const router = useRouter()
 
-  const handleLogout = () => {
-    logout()
-    router.push("/")
+  const handleLogout = async () => {
+    await logout()
+    // No need for router.push here since we're doing a hard navigation in the logout function
   }
 
   return (

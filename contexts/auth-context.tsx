@@ -226,6 +226,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = async () => {
     try {
       await supabase.auth.signOut()
+
+      // Force a hard refresh after logout to ensure UI is in sync
+      if (typeof window !== "undefined") {
+        window.location.href = "/"
+      }
     } catch (error) {
       console.error("Error signing out:", error)
     }
