@@ -13,7 +13,6 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { useAuth } from "@/contexts/auth-context"
-import { toast } from "@/components/ui/use-toast"
 
 export default function LoginPage() {
   const router = useRouter()
@@ -23,43 +22,22 @@ export default function LoginPage() {
   const [error, setError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
 
-  // Completely replace the handleSubmit function with this more reliable version
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
     setIsLoading(true)
 
     try {
-      console.log("Attempting login with:", email)
       const { success, error } = await login(email, password)
 
       if (success) {
-        console.log("Login successful, preparing to redirect")
-
-        // Show success message
-        toast({
-          title: "Login successful",
-          description: "You have been logged in successfully.",
-        })
-
-        // Get return URL if any
-        const returnUrl =
-          typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("returnUrl") : null
-        const redirectTo = returnUrl || "/"
-
-        // Short delay to ensure toast is visible and auth state is updated
-        setTimeout(() => {
-          // Force a hard navigation
-          if (typeof window !== "undefined") {
-            window.location.href = redirectTo
-          }
-        }, 500)
+        // Check if we need to redirect to a specific page
+        const returnUrl = new URLSearchParams(window.location.search).get("returnUrl")
+        router.push(returnUrl || "/")
       } else {
-        console.error("Login failed:", error)
         setError(error || "Email atau password salah. Silakan coba lagi.")
       }
     } catch (err) {
-      console.error("Exception during login:", err)
       setError("Terjadi kesalahan. Silakan coba lagi.")
     } finally {
       setIsLoading(false)

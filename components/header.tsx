@@ -21,12 +21,6 @@ export default function Header() {
   const { user, logout } = useAuth()
   const { totalItems } = useCart()
 
-  // Update the logout handler in the header component
-  const handleLogout = async () => {
-    await logout()
-    // No need for router.push here since we're doing a hard navigation in the logout function
-  }
-
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center">
@@ -112,7 +106,7 @@ export default function Header() {
                     </DropdownMenuItem>
                   )}
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleLogout}>
+                  <DropdownMenuItem onClick={logout}>
                     <LogOut className="mr-2 h-4 w-4" />
                     <span>Keluar</span>
                   </DropdownMenuItem>

@@ -13,7 +13,6 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { useAuth } from "@/contexts/auth-context"
-import { toast } from "@/components/ui/use-toast"
 
 export default function SignupPage() {
   const router = useRouter()
@@ -25,7 +24,6 @@ export default function SignupPage() {
   const [error, setError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
 
-  // Completely replace the handleSubmit function with this more reliable version
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
@@ -39,36 +37,16 @@ export default function SignupPage() {
     setIsLoading(true)
 
     try {
-      console.log("Attempting signup with:", email)
       const { success, error } = await signup(name, email, password)
 
       if (success) {
-        console.log("Signup successful, preparing to redirect")
-
-        // Show success message
-        toast({
-          title: "Signup successful",
-          description: "Your account has been created successfully.",
-        })
-
-        // Get return URL if any
-        const returnUrl =
-          typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("returnUrl") : null
-        const redirectTo = returnUrl || "/"
-
-        // Short delay to ensure toast is visible and auth state is updated
-        setTimeout(() => {
-          // Force a hard navigation
-          if (typeof window !== "undefined") {
-            window.location.href = redirectTo
-          }
-        }, 500)
+        // Redirect to home or previous page
+        const returnUrl = new URLSearchParams(window.location.search).get("returnUrl")
+        router.push(returnUrl || "/")
       } else {
-        console.error("Signup failed:", error)
         setError(error || "Email sudah terdaftar. Silakan gunakan email lain.")
       }
     } catch (err) {
-      console.error("Exception during signup:", err)
       setError("Terjadi kesalahan. Silakan coba lagi.")
     } finally {
       setIsLoading(false)
